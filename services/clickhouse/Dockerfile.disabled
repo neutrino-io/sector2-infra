@@ -1,0 +1,24 @@
+# ClickHouse skeleton — NOT deployed
+#
+# Original ClickHouse instance lives on Railway (managed by Nematix).
+# This skeleton is here for documentation / future-self-host scenarios.
+#
+# To activate: rename to `Dockerfile` and add a [[services]] block to
+# root railway.toml. Ensure CLICKHOUSE_HOST env var in trino/config/clickhouse.properties
+# points at the deployed instance.
+
+# Use as a template only — DO NOT deploy this without owner approval.
+
+# FROM clickhouse/clickhouse-server:23.8
+
+# USER root
+# RUN apt-get update && apt-get install -y curl && \
+#     apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# # Init scripts for sector2 schema (voter roll + geography)
+# COPY schema.ddl /docker-entrypoint-initdb.d/01-schema.sql
+# COPY config.xml /etc/clickhouse-server/config.d/01-network.xml
+
+# EXPOSE 9000 8123
+# HEALTHCHECK --interval=10s --timeout=5s --retries=10 \
+#   CMD clickhouse-client --query "SELECT 1" || exit 1
