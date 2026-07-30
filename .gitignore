@@ -1,0 +1,51 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual envs
+venv/
+env/
+.venv/
+ENV/
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+.env.secrets
+
+# Logs
+*.log
+logs/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker
+*.pid
+
+# Volumes / data
+data/
+volumes/
+
+# Trino data dir
+/data/
+
+# Build artifacts
+dist/
+build/
+*.tar.gz
+*.zip
