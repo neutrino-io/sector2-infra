@@ -2,12 +2,12 @@ FROM trinodb/trino:435
 
 USER root
 
-RUN mkdir -p /etc/trino/catalog
+RUN mkdir -p /etc/trino/catalog && chown -R trino:trino /etc/trino
 
 USER trino
 
-# Single test file COPY
-COPY --chown=trino:trino services/trino/config/iceberg.properties /etc/trino/catalog/iceberg.properties
+# Catalog configs
+COPY --chown=trino:trino services/trino/config/ /etc/trino/catalog/
 
 EXPOSE 8080
 HEALTHCHECK --interval=10s --timeout=5s --start-period=30s --retries=10 \
