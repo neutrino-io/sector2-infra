@@ -8,9 +8,8 @@ RUN mkdir -p /etc/trino/catalog && \
 
 USER trino
 
-# Copy catalog configs (build context is repo root, not services/trino/)
-# The COPY path is relative to the build context, not the Dockerfile
-COPY --chown=trino:trino services/trino/config/ /etc/trino/catalog/
+# Copy catalog configs (relative to Dockerfile directory = services/trino/)
+COPY --chown=trino:trino config/ /etc/trino/catalog/
 
 EXPOSE 8080
 HEALTHCHECK --interval=10s --timeout=5s --start-period=30s --retries=10 \
