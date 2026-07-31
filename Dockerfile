@@ -12,3 +12,5 @@ COPY --chown=trino:trino services/trino/config/ /etc/trino/catalog/
 EXPOSE 8080
 HEALTHCHECK --interval=10s --timeout=5s --start-period=30s --retries=10 \
   CMD curl -f http://localhost:8080/v1/info || exit 1
+
+# Build marker: $(cat /tmp/build-marker.txt 2>/dev/null || echo "n/a")
