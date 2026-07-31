@@ -45,10 +45,10 @@ dockerfilePath = "Dockerfile"
 
 [services.deploy]
 # Bash command that substitutes env vars in catalog configs, then runs Trino.
-# - Copies catalog configs to /tmp/cfg (writable dir)
+# - Copies catalog configs to /tmp/cfg/catalog (writable dir)
 # - Substitutes __PLACEHOLDER__ with Railway env vars
-# - Runs Trino launcher with --catalog-config-dir pointing to substituted configs
-startCommand = "bash -c 'mkdir -p /tmp/cfg && cp /etc/trino/catalog/*.properties /tmp/cfg/ && for f in /tmp/cfg/*.properties; do sed -i -e \"s|__R2_ICEBERG_REST_URI__|${R2_ICEBERG_REST_URI:-}|g\" -e \"s|__R2_ICEBERG_WAREHOUSE__|${R2_ICEBERG_WAREHOUSE:-}|g\" -e \"s|__R2_CATALOG_TOKEN__|${R2_CATALOG_TOKEN:-}|g\" -e \"s|__R2_ACCESS_KEY__|${R2_ACCESS_KEY:-}|g\" -e \"s|__R2_SECRET_KEY__|${R2_SECRET_KEY:-}|g\" -e \"s|__R2_S3_ENDPOINT__|${R2_S3_ENDPOINT:-}|g\" -e \"s|__CLICKHOUSE_HOST__|${CLICKHOUSE_HOST:-}|g\" -e \"s|__CLICKHOUSE_PORT__|${CLICKHOUSE_PORT:-}|g\" -e \"s|__CLICKHOUSE_USER__|${CLICKHOUSE_USER:-}|g\" -e \"s|__CLICKHOUSE_PASSWORD__|${CLICKHOUSE_PASSWORD:-}|g\" $f; done && exec /usr/lib/trino/bin/launcher run --catalog-config-dir /tmp/cfg'"
+# - Runs Trino launcher with --etc-dir pointing to substituted configs
+startCommand = "bash -c 'mkdir -p /tmp/cfg/catalog && cp /etc/trino/catalog/*.properties /tmp/cfg/catalog/ && for f in /tmp/cfg/catalog/*.properties; do sed -i -e \"s|__R2_ICEBERG_REST_URI__|${R2_ICEBERG_REST_URI:-}|g\" -e \"s|__R2_ICEBERG_WAREHOUSE__|${R2_ICEBERG_WAREHOUSE:-}|g\" -e \"s|__R2_CATALOG_TOKEN__|${R2_CATALOG_TOKEN:-}|g\" -e \"s|__R2_ACCESS_KEY__|${R2_ACCESS_KEY:-}|g\" -e \"s|__R2_SECRET_KEY__|${R2_SECRET_KEY:-}|g\" -e \"s|__R2_S3_ENDPOINT__|${R2_S3_ENDPOINT:-}|g\" -e \"s|__CLICKHOUSE_HOST__|${CLICKHOUSE_HOST:-}|g\" -e \"s|__CLICKHOUSE_PORT__|${CLICKHOUSE_PORT:-}|g\" -e \"s|__CLICKHOUSE_USER__|${CLICKHOUSE_USER:-}|g\" -e \"s|__CLICKHOUSE_PASSWORD__|${CLICKHOUSE_PASSWORD:-}|g\" $f; done && exec /usr/lib/trino/bin/launcher run --etc-dir /tmp/cfg'"
 healthcheckPath = "/v1/info"
 healthcheckTimeout = 300
 restartPolicyType = "ON_FAILURE"
