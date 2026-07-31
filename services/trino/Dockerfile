@@ -8,8 +8,11 @@ RUN mkdir -p /etc/trino/catalog && \
 
 USER trino
 
-# Copy catalog configs (relative to Dockerfile directory = services/trino/)
+# Copy catalog configs
 COPY --chown=trino:trino config/ /etc/trino/catalog/
+
+# Build marker
+COPY --chown=trino:trino config/iceberg.properties /opt/build-marker.txt
 
 EXPOSE 8080
 HEALTHCHECK --interval=10s --timeout=5s --start-period=30s --retries=10 \
