@@ -1,4 +1,4 @@
-FROM trinodb/trino:435
+FROM trinodb/trino:483
 
 USER root
 RUN mkdir -p /etc/trino/catalog && chown -R trino:trino /etc/trino
