@@ -1,21 +1,28 @@
 #!/bin/bash
 # run-trino.sh - Substitutes env vars in catalog configs, then launches Trino.
-# This runs as ENTRYPOINT so Railway Variables can be injected at runtime.
 
 set -e
 
-# Trino's --etc-dir replaces the "etc/" prefix, so catalogs go at $DIR/catalog/
+# Write to file AND stdout (Railway might filter stdout)
+LOG="/tmp/trino-startup.log"
+
+exec > >(tee -a "$LOG") 2>&1
+
+echo "=== Trino startup script running at $(date -u) ==="
+
 CONFIG_DIR="/tmp/trino-catalog"
 mkdir -p "$CONFIG_DIR/catalog"
 
-echo "=== Trino startup: substituting env vars in catalog configs ==="
 echo "Config dir: $CONFIG_DIR"
-echo "Env vars: R2_ICEBERG_REST_URI=${R2_ICEBERG_REST_URI:+SET} R2_CATALOG_TOKEN=${R2_CATALOG_TOKEN:+SET} R2_S3_ENDPOINT=${R2_S3_ENDPOINT:+SET}"
+echo "R2_ICEBERG_REST_URI: ${R2_ICEBERG_REST_URI:+SET (len=${#R2_ICEBERG_REST_URI})}"
+echo "R2_CATALOG_TOKEN: ${R2_CATALOG_TOKEN:+SET (len=${#R2_CATALOG_TOKEN})}"
+echo "R2_S3_ENDPOINT: ${R2_S3_ENDPOINT:+SET (len=${#R2_S3_ENDPOINT})}"
+echo "R2_ACCESS_KEY: ${R2_ACCESS_KEY:+SET}"
 
-# Copy catalog configs to writable dir (with catalog/ subdir)
+# Copy catalog configs
 cp /etc/trino/catalog/*.properties "$CONFIG_DIR/catalog/"
 
-# Substitute placeholders with Railway env vars
+# Substitute placeholders
 for f in "$CONFIG_DIR/catalog"/*.properties; do
     echo "Processing: $f"
     sed -i \
@@ -30,8 +37,8 @@ for f in "$CONFIG_DIR/catalog"/*.properties; do
         -e "s|__CLICKHOUSE_USER__|${CLICKHOUSE_USER:-}|g" \
         -e "s|__CLICKHOUSE_PASSWORD__|${CLICKHOUSE_PASSWORD:-}|g" \
         "$f"
-    echo "--- $f ---"
-    grep -v "SECRET\|PASSWORD\|KEY" "$f" || true
+    echo "--- Substituted content (non-secret) ---"
+    grep -v "SECRET\|PASSWORD\|KEY" "$f" || echo "(all values hidden)"
 done
 
 echo "=== Launching Trino with --etc-dir $CONFIG_DIR ==="
