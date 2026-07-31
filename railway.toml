@@ -45,6 +45,53 @@ name = "sector2-trino"
 dockerfilePath = "Dockerfile"
 
 [services.deploy]
+startCommand = "/etc/trino/run-trino.sh" Railway monorepo configuration for sector2-infra
+# Each service has its own [[services]] block with its own Dockerfile.
+# Railway auto-detects multi-service monorepos from this single railway.toml.
+
+# ============================================================================
+# Service: superset
+# ============================================================================
+# Existing Apache Superset deployment (refactored from apache-superset-railway)
+# Status: Live on Railway, accessible at apache-superset-railway-production-13fe.up.railway.app
+[[services]]
+name = "superset"
+dockerfilePath = "services/superset/Dockerfile"
+
+[services.deploy]
+startCommand = "./superset_init.sh"
+healthcheckPath = "/health"
+healthcheckTimeout = 300
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 3
+
+[services.deploy.volumes]
+mountPath = "/app/superset_home"
+name = "superset-data"
+
+# Required environment variables (set in Railway Variables UI)
+[services.deploy.env]
+ADMIN_USERNAME = "${{ secrets.ADMIN_USERNAME }}"
+ADMIN_EMAIL = "${{ secrets.ADMIN_EMAIL }}"
+ADMIN_PASSWORD = "${{ secrets.ADMIN_PASSWORD }}"
+SECRET_KEY = "${{ secrets.SECRET_KEY }}"
+SUPERSET_SECRET_KEY = "${{ secrets.SUPERSET_SECRET_KEY }}"
+SQLALCHEMY_DATABASE_URI = "${{ secrets.POSTGRES_URL }}"
+# Optional
+REDIS_URL = "${{ secrets.REDIS_URL }}"
+# Service references
+TRINO_HOST = "sector2-trino.railway.internal"
+TRINO_PORT = "8080"
+
+# ============================================================================
+# Service: sector2-trino  (NEW — Phase 1 BI tier requirement)
+# ============================================================================
+# Status: NOT YET DEPLOYED on Railway. Owner action required.
+[[services]]
+name = "sector2-trino"
+dockerfilePath = "Dockerfile"
+
+[services.deploy]
 startCommand = "bash -c \"mkdir -p /tmp/trino-configs && cp /etc/trino/catalog/*.properties /tmp/trino-configs/ && for f in /tmp/trino-configs/*.properties; do sed -i -e s|__R2_ICEBERG_REST_URI__|\${R2_ICEBERG_REST_URI:-}|g -e s|__R2_CATALOG_WAREHOUSE__|\${R2_ICEBERG_WAREHOUSE:-}|g -e s|__R2_CATALOG_TOKEN__|\${R2_CATALOG_TOKEN:-}|g -e s|__R2_ACCESS_KEY__|\${R2_ACCESS_KEY:-}|g -e s|__R2_SECRET_KEY__|\${R2_SECRET_KEY:-}|g -e s|__R2_S3_ENDPOINT__|\${R2_S3_ENDPOINT:-}|g -e s|__CLICKHOUSE_HOST__|\${CLICKHOUSE_HOST:-clickhouse}|g -e s|__CLICKHOUSE_PORT__|\${CLICKHOUSE_PORT:-9000}|g -e s|__CLICKHOUSE_USER__|\${CLICKHOUSE_USER:-default}|g -e s|__CLICKHOUSE_PASSWORD__|\${CLICKHOUSE_PASSWORD:-}|g \$f; done && /usr/lib/trino/bin/launcher run --catalog-config-dir /tmp/trino-configs\""
 healthcheckPath = "/v1/info"
 healthcheckTimeout = 300

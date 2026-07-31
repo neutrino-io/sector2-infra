@@ -6,8 +6,11 @@ RUN mkdir -p /etc/trino/catalog && chown -R trino:trino /etc/trino
 
 USER trino
 
-# Catalog configs (placeholders substituted at runtime by trino_init.sh)
+# Catalog configs (placeholders substituted at runtime by run-trino.sh)
 COPY --chown=trino:trino services/trino/config/ /etc/trino/catalog/
+
+# Script to substitute env vars and launch Trino
+COPY --chown=trino:trino services/trino/run-trino.sh /etc/trino/run-trino.sh
 
 EXPOSE 8080
 HEALTHCHECK --interval=10s --timeout=5s --start-period=30s --retries=10 \
