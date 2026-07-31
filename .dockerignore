@@ -1,0 +1,38 @@
+# Git
+.git/
+.gitignore
+
+# Node
+node_modules/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+.installed.cfg
+*.egg
+venv/
+env/
+.venv/
+ENV/
+
+# Secrets
+.env
+.env.*
+!.env.example
+
+# Editor / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Docker artifacts
+*.tar.gz
+*.zip
+
+# Volumes / data
+data/
+volumes/
