@@ -45,7 +45,7 @@ name = "sector2-trino"
 dockerfilePath = "services/trino/Dockerfile"
 
 [services.deploy]
-startCommand = "./trino_init.sh"
+# No startCommand - let Dockerfile ENTRYPOINT run trino_init.sh
 healthcheckPath = "/v1/info"
 healthcheckTimeout = 300
 restartPolicyType = "ON_FAILURE"
