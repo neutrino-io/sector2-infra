@@ -9,12 +9,6 @@ USER trino
 # Catalog configs (placeholders substituted at runtime by trino_init.sh)
 COPY --chown=trino:trino services/trino/config/ /etc/trino/catalog/
 
-# Init script (substitutes env vars, then runs launcher)
-COPY --chown=trino:trino services/trino/trino_init.sh /etc/trino/trino_init.sh
-
 EXPOSE 8080
-HEALTHCHECK --interval=10s --timeout=5s --start-period=30s --retries=10 \\
+HEALTHCHECK --interval=10s --timeout=5s --start-period=30s --retries=10 \
   CMD curl -f http://localhost:8080/v1/info || exit 1
-
-# Override base image ENTRYPOINT to run our init script first
-ENTRYPOINT ["/bin/bash", "/etc/trino/trino_init.sh"]

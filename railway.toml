@@ -45,6 +45,7 @@ name = "sector2-trino"
 dockerfilePath = "Dockerfile"
 
 [services.deploy]
+startCommand = "bash -c \"mkdir -p /tmp/trino-configs && cp /etc/trino/catalog/*.properties /tmp/trino-configs/ && for f in /tmp/trino-configs/*.properties; do sed -i -e s|__R2_ICEBERG_REST_URI__|\${R2_ICEBERG_REST_URI:-}|g -e s|__R2_CATALOG_WAREHOUSE__|\${R2_ICEBERG_WAREHOUSE:-}|g -e s|__R2_CATALOG_TOKEN__|\${R2_CATALOG_TOKEN:-}|g -e s|__R2_ACCESS_KEY__|\${R2_ACCESS_KEY:-}|g -e s|__R2_SECRET_KEY__|\${R2_SECRET_KEY:-}|g -e s|__R2_S3_ENDPOINT__|\${R2_S3_ENDPOINT:-}|g -e s|__CLICKHOUSE_HOST__|\${CLICKHOUSE_HOST:-clickhouse}|g -e s|__CLICKHOUSE_PORT__|\${CLICKHOUSE_PORT:-9000}|g -e s|__CLICKHOUSE_USER__|\${CLICKHOUSE_USER:-default}|g -e s|__CLICKHOUSE_PASSWORD__|\${CLICKHOUSE_PASSWORD:-}|g \$f; done && /usr/lib/trino/bin/launcher run --catalog-config-dir /tmp/trino-configs\""
 healthcheckPath = "/v1/info"
 healthcheckTimeout = 300
 restartPolicyType = "ON_FAILURE"
