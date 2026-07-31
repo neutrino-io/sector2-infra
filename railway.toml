@@ -42,7 +42,7 @@ TRINO_PORT = "8080"
 # Status: NOT YET DEPLOYED on Railway. Owner action required.
 [[services]]
 name = "sector2-trino"
-dockerfilePath = "services/trino/Dockerfile"
+dockerfilePath = "Dockerfile"
 
 [services.deploy]
 healthcheckPath = "/v1/info"
