@@ -1,12 +1,10 @@
 # Railway monorepo configuration for sector2-infra
-# Each service has its own [[services]] block with its own Dockerfile.
+# Each service has its own [[services]] block.
 # Railway auto-detects multi-service monorepos from this single railway.toml.
 
 # ============================================================================
 # Service: superset
 # ============================================================================
-# Existing Apache Superset deployment (refactored from apache-superset-railway)
-# Status: Live on Railway, accessible at apache-superset-railway-production-13fe.up.railway.app
 [[services]]
 name = "superset"
 dockerfilePath = "services/superset/Dockerfile"
@@ -30,7 +28,6 @@ ADMIN_PASSWORD = "${{ secrets.ADMIN_PASSWORD }}"
 SECRET_KEY = "${{ secrets.SECRET_KEY }}"
 SUPERSET_SECRET_KEY = "${{ secrets.SUPERSET_SECRET_KEY }}"
 SQLALCHEMY_DATABASE_URI = "${{ secrets.POSTGRES_URL }}"
-# Optional
 REDIS_URL = "${{ secrets.REDIS_URL }}"
 # Service references
 TRINO_HOST = "sector2-trino.railway.internal"
@@ -39,101 +36,33 @@ TRINO_PORT = "8080"
 # ============================================================================
 # Service: sector2-trino
 # ============================================================================
-# Uses Railway env vars for runtime config substitution.
-# Trino's default launcher (startCommand) calls /usr/lib/trino/bin/launcher run
-# which reads /etc/trino/catalog/*.properties. Our startCommand first runs
-# services/trino/run-trino.sh which substitutes placeholders with env vars.
+# Trino 435 with Iceberg REST catalog backed by Cloudflare R2 Data Catalog.
+# Env vars are substituted at runtime by the startCommand bash script.
+# Token NEVER touches git - stays in Railway Variables only.
 [[services]]
 name = "sector2-trino"
 dockerfilePath = "Dockerfile"
 
 [services.deploy]
 # Bash command that substitutes env vars in catalog configs, then runs Trino.
-# Uses `bash -c` to chain: substitute env vars + exec launcher.
-# The catalog-config-dir flag points to a writable dir with substituted configs.
-startCommand = "bash -c 'mkdir -p /tmp/cfg && cp /etc/trino/catalog/*.properties /tmp/cfg/ && for f in /tmp/cfg/*.properties; do sed -i -e s|__R2_ICEBERG_REST_URI__|${R2_ICEBERG_REST_URI:-}|g -e s|__R2_CATALOG_WAREHOUSE__|${R2_ICEBERG_WAREHOUSE:-}|g -e s|__R2_CATALOG_TOKEN__|${R2_CATALOG_TOKEN:-}|g -e s|__R2_ACCESS_KEY__|${R2_ACCESS_KEY:-}|g -e s|__R2_SECRET_KEY__|${R2_SECRET_KEY:-}|g -e s|__R2_S3_ENDPOINT__|${R2_S3_ENDPOINT:-}|g $f; done && exec /usr/lib/trino/bin/launcher run --catalog-config-dir /tmp/cfg'"
+# - Copies catalog configs to /tmp/cfg (writable dir)
+# - Substitutes __PLACEHOLDER__ with Railway env vars
+# - Runs Trino launcher with --catalog-config-dir pointing to substituted configs
+startCommand = "bash -c 'mkdir -p /tmp/cfg && cp /etc/trino/catalog/*.properties /tmp/cfg/ && for f in /tmp/cfg/*.properties; do sed -i -e \"s|__R2_ICEBERG_REST_URI__|${R2_ICEBERG_REST_URI:-}|g\" -e \"s|__R2_ICEBERG_WAREHOUSE__|${R2_ICEBERG_WAREHOUSE:-}|g\" -e \"s|__R2_CATALOG_TOKEN__|${R2_CATALOG_TOKEN:-}|g\" -e \"s|__R2_ACCESS_KEY__|${R2_ACCESS_KEY:-}|g\" -e \"s|__R2_SECRET_KEY__|${R2_SECRET_KEY:-}|g\" -e \"s|__R2_S3_ENDPOINT__|${R2_S3_ENDPOINT:-}|g\" -e \"s|__CLICKHOUSE_HOST__|${CLICKHOUSE_HOST:-}|g\" -e \"s|__CLICKHOUSE_PORT__|${CLICKHOUSE_PORT:-}|g\" -e \"s|__CLICKHOUSE_USER__|${CLICKHOUSE_USER:-}|g\" -e \"s|__CLICKHOUSE_PASSWORD__|${CLICKHOUSE_PASSWORD:-}|g\" $f; done && exec /usr/lib/trino/bin/launcher run --catalog-config-dir /tmp/cfg'"
 healthcheckPath = "/v1/info"
 healthcheckTimeout = 300
 restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 3
 
+# Environment variables (tokens stored only in Railway Variables - never in git)
 [services.deploy.env]
-# R2 Data Catalog - tokens stay in Railway Variables, never in git
 R2_ICEBERG_REST_URI = "${{ secrets.R2_ICEBERG_REST_URI }}"
 R2_ICEBERG_WAREHOUSE = "${{ secrets.R2_ICEBERG_WAREHOUSE }}"
 R2_CATALOG_TOKEN = "${{ secrets.R2_CATALOG_TOKEN }}"
 R2_ACCESS_KEY = "${{ secrets.R2_ACCESS_KEY }}"
 R2_SECRET_KEY = "${{ secrets.R2_SECRET_KEY }}"
 R2_S3_ENDPOINT = "${{ secrets.R2_S3_ENDPOINT }}"
-# ClickHouse (legacy voter roll data)
 CLICKHOUSE_HOST = "${{ secrets.CLICKHOUSE_HOST }}"
 CLICKHOUSE_PORT = "${{ secrets.CLICKHOUSE_PORT }}"
 CLICKHOUSE_USER = "${{ secrets.CLICKHOUSE_USER }}"
 CLICKHOUSE_PASSWORD = "${{ secrets.CLICKHOUSE_PASSWORD }}"
-# Service: superset
-# ============================================================================
-# Existing Apache Superset deployment (refactored from apache-superset-railway)
-# Status: Live on Railway, accessible at apache-superset-railway-production-13fe.up.railway.app
-[[services]]
-name = "superset"
-dockerfilePath = "services/superset/Dockerfile"
-
-[services.deploy]
-startCommand = "./superset_init.sh"
-healthcheckPath = "/health"
-healthcheckTimeout = 300
-restartPolicyType = "ON_FAILURE"
-restartPolicyMaxRetries = 3
-
-[services.deploy.volumes]
-mountPath = "/app/superset_home"
-name = "superset-data"
-
-# Required environment variables (set in Railway Variables UI)
-[services.deploy.env]
-ADMIN_USERNAME = "${{ secrets.ADMIN_USERNAME }}"
-ADMIN_EMAIL = "${{ secrets.ADMIN_EMAIL }}"
-ADMIN_PASSWORD = "${{ secrets.ADMIN_PASSWORD }}"
-SECRET_KEY = "${{ secrets.SECRET_KEY }}"
-SUPERSET_SECRET_KEY = "${{ secrets.SUPERSET_SECRET_KEY }}"
-SQLALCHEMY_DATABASE_URI = "${{ secrets.POSTGRES_URL }}"
-# Optional
-REDIS_URL = "${{ secrets.REDIS_URL }}"
-# Service references
-TRINO_HOST = "sector2-trino.railway.internal"
-TRINO_PORT = "8080"
-
-# ============================================================================
-# Service: sector2-trino  (NEW — Phase 1 BI tier requirement)
-# ============================================================================
-# Status: NOT YET DEPLOYED on Railway. Owner action required.
-[[services]]
-name = "sector2-trino"
-dockerfilePath = "Dockerfile"
-
-[services.deploy]
-startCommand = "bash -c \"mkdir -p /tmp/trino-configs && cp /etc/trino/catalog/*.properties /tmp/trino-configs/ && for f in /tmp/trino-configs/*.properties; do sed -i -e s|__R2_ICEBERG_REST_URI__|\${R2_ICEBERG_REST_URI:-}|g -e s|__R2_CATALOG_WAREHOUSE__|\${R2_ICEBERG_WAREHOUSE:-}|g -e s|__R2_CATALOG_TOKEN__|\${R2_CATALOG_TOKEN:-}|g -e s|__R2_ACCESS_KEY__|\${R2_ACCESS_KEY:-}|g -e s|__R2_SECRET_KEY__|\${R2_SECRET_KEY:-}|g -e s|__R2_S3_ENDPOINT__|\${R2_S3_ENDPOINT:-}|g -e s|__CLICKHOUSE_HOST__|\${CLICKHOUSE_HOST:-clickhouse}|g -e s|__CLICKHOUSE_PORT__|\${CLICKHOUSE_PORT:-9000}|g -e s|__CLICKHOUSE_USER__|\${CLICKHOUSE_USER:-default}|g -e s|__CLICKHOUSE_PASSWORD__|\${CLICKHOUSE_PASSWORD:-}|g \$f; done && /usr/lib/trino/bin/launcher run --catalog-config-dir /tmp/trino-configs\""
-healthcheckPath = "/v1/info"
-healthcheckTimeout = 300
-restartPolicyType = "ON_FAILURE"
-
-[services.deploy.env]
-R2_ICEBERG_REST_URI = "https://catalog.cloudflarestorage.com/203a605533f37eb35da80dcf03a7bed6/gyhc40sdz8-ivj8v3841x-bronze-storage"
-R2_CATALOG_TOKEN = "${{ secrets.R2_CATALOG_TOKEN }}"
-R2_ACCESS_KEY = "${{ secrets.R2_ACCESS_KEY }}"
-R2_SECRET_KEY = "${{ secrets.R2_SECRET_KEY }}"
-R2_S3_ENDPOINT = "https://203a605533f37eb35da80dcf03a7bed6.r2.cloudflarestorage.com"
-CLICKHOUSE_HOST = "${{ secrets.CLICKHOUSE_HOST }}"
-CLICKHOUSE_PORT = "${{ secrets.CLICKHOUSE_PORT }}"
-CLICKHOUSE_USER = "${{ secrets.CLICKHOUSE_USER }}"
-CLICKHOUSE_PASSWORD = "${{ secrets.CLICKHOUSE_PASSWORD }}"
-
-# ============================================================================
-# Notes on PostgreSQL + Redis (NOT in this file)
-# ============================================================================
-# Both PostgreSQL and Redis are managed by Railway as plugins:
-# - PostgreSQL plugin: stores Superset metadata
-# - Redis plugin (optional): caching + rate limiting for Superset
-# Provision via Railway dashboard → New → Database → PostgreSQL / Redis
-# Connection strings are auto-injected as ${{ secrets.POSTGRES_URL }} and
-# ${{ secrets.REDIS_URL }} for use in other services.
