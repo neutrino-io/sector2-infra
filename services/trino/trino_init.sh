@@ -12,6 +12,7 @@ for catalog in /etc/trino/catalog/*.properties; do
     echo "  Substituting: $(basename $catalog)"
     sed -i \
       -e "s|__R2_ICEBERG_REST_URI__|${R2_ICEBERG_REST_URI:-}|g" \
+      -e "s|__R2_CATALOG_WAREHOUSE__|${R2_ICEBERG_WAREHOUSE:-}|g" \
       -e "s|__R2_CATALOG_TOKEN__|${R2_CATALOG_TOKEN:-}|g" \
       -e "s|__R2_ACCESS_KEY__|${R2_ACCESS_KEY:-}|g" \
       -e "s|__R2_SECRET_KEY__|${R2_SECRET_KEY:-}|g" \
