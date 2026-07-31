@@ -1,5 +1,7 @@
 FROM trinodb/trino:483
 
+# Cache bust 2026-07-31_21:25
+
 USER root
 RUN mkdir -p /etc/trino/catalog && chown -R trino:trino /etc/trino
 
