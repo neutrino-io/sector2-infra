@@ -1,10 +1,17 @@
 #!/bin/bash
-# Substitute env vars in catalog configs, then exec Trino's launcher
+# Minimal init script
 set -e
 
-echo "======================================================================"
-echo "Trino init at $(date -u)"
-echo "======================================================================"
+# Create a marker file (proves the script ran)
+echo "Trino init at $(date -u)" > /tmp/trino-ran.txt
+echo "Process ID: $$" >> /tmp/trino-ran.txt
+echo "User: $(whoami)" >> /tmp/trino-ran.txt
+echo "Args: $@" >> /tmp/trino-ran.txt
+echo "Env vars:" >> /tmp/trino-ran.txt
+env | grep -E "R2_|CLICKHOUSE_" >> /tmp/trino-ran.txt
+
+# Make it readable from outside
+chmod 644 /tmp/trino-ran.txt
 
 # Substitute placeholders in catalog configs
 for catalog in /etc/trino/catalog/*.properties; do
@@ -26,6 +33,5 @@ done
 
 chown -R trino:trino /etc/trino/catalog/
 
-echo ""
-echo "Starting Trino via launcher..."
+# Run Trino
 exec /usr/lib/trino/bin/launcher run
