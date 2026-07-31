@@ -1,5 +1,5 @@
 # Use explicit digest to force Trino 483 image (NOT the cached 435!)
-FROM trinodb/trino:latest
+FROM trinodb/trino:483
 
 USER root
 RUN mkdir -p /etc/trino/catalog && chown -R trino:trino /etc/trino
