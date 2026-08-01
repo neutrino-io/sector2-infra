@@ -1,0 +1,9 @@
+# Trino coordinator single-node config
+coordinator=true
+node-scheduler.include-coordinator=true
+http-server.http.port=8080
+discovery.uri=http://localhost:8080
+
+# Railway's edge proxy sets X-Forwarded-For - Trino 483 rejects by default.
+# Enable processing of forwarded headers from the trusted Railway proxy.
+http-server.process-forwarded=true
