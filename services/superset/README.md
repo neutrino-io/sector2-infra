@@ -89,4 +89,4 @@ JWT=$(curl -sS -X POST https://<your-superset-url>/api/v1/security/login \
 # List databases
 curl -sS https://<your-superset-url>/api/v1/database/ \
   -H "Authorization: Bearer $JWT" | python3 -m json.tool
-```
+```Test push
