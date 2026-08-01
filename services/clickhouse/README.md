@@ -1,49 +1,34 @@
-# ClickHouse (skeleton — not deployed)
+# ClickHouse
 
-This service is **a skeleton only**. The actual ClickHouse instance is managed by the
-Nematix account on Railway (separate service, separate `gyhc40sdz8-ivj8v3841x-*` namespace).
+The `ClickHouse` service in the Railway project is **actually** the Railway-managed PostgreSQL (`ghcr.io/railwayapp-templates/postgres-ssl:18`) — the service name is misleading; the image is a Postgres template, not ClickHouse.
 
-## Why skeleton?
+## What's actually here
 
-The `sector2-infra` refactor consolidates infrastructure config but does NOT migrate the
-existing ClickHouse instance. Reasons:
+- This directory is a **placeholder** for a future self-hosted ClickHouse deployment
+- Today, the live data source is a separate Railway service running a Postgres image (named `ClickHouse` in the dashboard for legacy reasons)
+- The Trino `clickhouse` catalog currently connects to **that** service via JDBC
 
-1. **Data gravity**: voter roll (1,048,540 PII rows) lives in the current ClickHouse; migrating is non-trivial
-2. **Owner decision**: any PII migration requires owner sign-off
-3. **Read-only access**: existing Trino config connects to ClickHouse as read-only consumer; no need to redeploy
+## Future: self-hosted ClickHouse
 
-## Files
+If/when we migrate to a real ClickHouse instance, add a `[[services]]` block to `/railway.toml`:
 
-- `Dockerfile.disabled` — template only, not built
-- `schema.ddl.example` — would create the `sector2` schema with voter roll tables
-- `config.xml.example` — would configure network/auth
-
-## How to activate (if ever needed)
-
-```bash
-# 1. Rename Dockerfile.disabled to Dockerfile
-mv Dockerfile.disabled Dockerfile
-
-# 2. Add to root railway.toml
-cat >> ../../railway.toml <<EOF
-
+```toml
 [[services]]
-name = "clickhouse"
+name = "sector2-clickhouse"
 dockerfilePath = "services/clickhouse/Dockerfile"
+rootDirectory = "services/clickhouse"
+
 [services.deploy]
 startCommand = "/entrypoint.sh"
 healthcheckPath = "/ping"
-EOF
+healthcheckTimeout = 5
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 3
 
-# 3. Set Railway env vars:
-#    CLICKHOUSE_USER, CLICKHOUSE_PASSWORD
-
-# 4. Migrate data (out of scope for this refactor)
+[services.deploy.env]
+CLICKHOUSE_DB = "sector2"
+CLICKHOUSE_USER = "default"
+CLICKHOUSE_PASSWORD = "${{ secrets.CLICKHOUSE_PASSWORD }}"
 ```
 
-## Current state (2026-07-30)
-
-- ✅ ClickHouse instance live on Railway (separate service)
-- ✅ 6 datasets configured in Superset (`election_pahang`, `district`, `vd_voters_enriched`, etc.)
-- ✅ Trino `clickhouse.properties` config ready to connect once Trino is deployed
-- ❌ This skeleton directory NOT deployed
+Until then, no deployable files exist here — the actual service lives outside this repo.

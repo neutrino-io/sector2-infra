@@ -10,6 +10,27 @@ Apache Superset BI dashboard UI for Sector2.
 - Exposes REST API at `/api/v1/`
 - Exposes MCP at `/mcp` (requires JWT)
 
+
+## Required Railway variables
+
+Set in Railway dashboard → Variables (never commit):
+```bash
+ADMIN_USERNAME          # required
+ADMIN_EMAIL             # required
+ADMIN_PASSWORD          # required, use a strong password
+SECRET_KEY              # required, 32-char random (`python3 -c "import secrets; print(secrets.token_urlsafe(32))"`)
+SUPERSET_SECRET_KEY     # required, 32-char random
+SQLALCHEMY_DATABASE_URI # required, postgresql://... URL (use ${{ Postgres.DATABASE_URL }})
+PORT                    # defaults to 8080; set to 8088 so Railway edge proxies correctly
+```
+
+Optional:
+```bash
+REDIS_URL               # for distributed cache/rate-limit
+MAPBOX_API_KEY          # for tile-based visualizations
+```
+
+
 ## Source
 
 Refactored from `apache-superset-railway/` (now archived). Same Dockerfile + same config; only organizational change is the new directory structure.

@@ -1,18 +1,34 @@
+# =============================================================================
 # Railway monorepo configuration for sector2-infra
-# Each service has its own [[services]] block.
-# Railway auto-detects multi-service monorepos from this single railway.toml.
+#
+# Single source of truth for ALL service deployment config on Railway.
+# Railway auto-detects multi-service monorepos from this file's [[services]]
+# blocks.
+#
+# Conventions:
+#   - Each service gets its own [[services]] block
+#   - dockerfilePath is RELATIVE TO the repo root (no leading slash)
+#   - rootDirectory pins the build context for each service
+#   - Secrets come from Railway Variables via "${{ secrets.X }}" - NEVER commit
+#   - healthcheckPath = "" disables Railway's deploy-time probe (needed for
+#     ASGI services with custom ProxyRouter - see .omc/skills/railway-asgi-healthcheck-gotcha.md)
+# =============================================================================
 
-# ============================================================================
-# Service: superset
-# ============================================================================
+# -----------------------------------------------------------------------------
+# Service: sector2-superset
+# -----------------------------------------------------------------------------
+# Apache Superset BI dashboard. Connects to Trino for queries.
 [[services]]
 name = "sector2-superset"
-dockerfilePath = "/services/superset/Dockerfile"
+dockerfilePath = "services/superset/Dockerfile"
+rootDirectory = "services/superset"
 
 [services.deploy]
 startCommand = "./superset_init.sh"
-healthcheckPath = "/health"
-healthcheckTimeout = 300
+# healthcheckPath intentionally empty - ProxyRouter's /health triggers
+# Railway's session killer after ~6 min. In-app /health route still works.
+healthcheckPath = ""
+healthcheckTimeout = null
 restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 3
 
@@ -20,43 +36,61 @@ restartPolicyMaxRetries = 3
 mountPath = "/app/superset_home"
 name = "apache-superset-railway-volume"
 
-# Required environment variables (set in Railway Variables UI)
 [services.deploy.env]
+# Admin + auth (required)
 ADMIN_USERNAME = "${{ secrets.ADMIN_USERNAME }}"
 ADMIN_EMAIL = "${{ secrets.ADMIN_EMAIL }}"
 ADMIN_PASSWORD = "${{ secrets.ADMIN_PASSWORD }}"
 SECRET_KEY = "${{ secrets.SECRET_KEY }}"
 SUPERSET_SECRET_KEY = "${{ secrets.SUPERSET_SECRET_KEY }}"
+# Database (required - PostgreSQL URI)
 SQLALCHEMY_DATABASE_URI = "${{ secrets.POSTGRES_URL }}"
+# Optional: Redis cache, Mapbox tiles
 REDIS_URL = "${{ secrets.REDIS_URL }}"
 MAPBOX_API_KEY = "${{ secrets.MAPBOX_API_KEY }}"
-# Service references
+# Port binding for uvicorn
+PORT = "8088"
+# Internal Trino reference for cross-service queries
 TRINO_HOST = "sector2-trino.railway.internal"
 TRINO_PORT = "8080"
 
-# ============================================================================
+# -----------------------------------------------------------------------------
 # Service: sector2-trino
-# ============================================================================
-# Trino 435 with Iceberg REST catalog backed by Cloudflare R2 Data Catalog.
-# Env vars are substituted at runtime by run-trino.sh ENTRYPOINT in Dockerfile.
-# Token NEVER touches git - stays in Railway Variables only.
+# -----------------------------------------------------------------------------
+# Trino 483 query engine. Iceberg catalog via Cloudflare R2 Data Catalog;
+# JDBC catalog for ClickHouse.
 [[services]]
 name = "sector2-trino"
-dockerfilePath = "Dockerfile"
-# - Runs Trino launcher with --etc-dir pointing to substituted configs
-healthcheckPath = "/v1/info"
+dockerfilePath = "services/trino/Dockerfile"
+rootDirectory = "services/trino"
+
+[services.deploy]
+# startCommand comes from Dockerfile ENTRYPOINT (trino-entrypoint.sh)
+# which does ${VAR} substitution on catalog templates then execs launcher
+healthcheckPath = ""
+healthcheckTimeout = null
 restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 3
 
-# Environment variables (tokens stored only in Railway Variables - never in git)
 [services.deploy.env]
+# R2 Data Catalog (OAuth2)
 R2_ICEBERG_REST_URI = "${{ secrets.R2_ICEBERG_REST_URI }}"
 R2_ICEBERG_WAREHOUSE = "${{ secrets.R2_ICEBERG_WAREHOUSE }}"
 R2_CATALOG_TOKEN = "${{ secrets.R2_CATALOG_TOKEN }}"
+# R2 S3 filesystem (for Iceberg data files)
 R2_ACCESS_KEY = "${{ secrets.R2_ACCESS_KEY }}"
 R2_SECRET_KEY = "${{ secrets.R2_SECRET_KEY }}"
 R2_S3_ENDPOINT = "${{ secrets.R2_S3_ENDPOINT }}"
+# ClickHouse JDBC catalog
 CLICKHOUSE_HOST = "${{ secrets.CLICKHOUSE_HOST }}"
 CLICKHOUSE_PORT = "${{ secrets.CLICKHOUSE_PORT }}"
 CLICKHOUSE_USER = "${{ secrets.CLICKHOUSE_USER }}"
 CLICKHOUSE_PASSWORD = "${{ secrets.CLICKHOUSE_PASSWORD }}"
+
+# -----------------------------------------------------------------------------
+# Service: Postgres (Railway-managed template)
+# -----------------------------------------------------------------------------
+# NOTE: This service is named "ClickHouse" in Railway but actually runs
+# postgres-ssl:18 (Railway's managed Postgres). Misnamed; not our concern.
+# Listed here for documentation. No [[services]] block - imported from
+# Railway template, configured via the Railway dashboard.
