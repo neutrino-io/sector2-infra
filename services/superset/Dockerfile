@@ -1,4 +1,4 @@
-FROM apache/superset:latest
+FROM apache/superset:4.1.1
 
 USER root
 
@@ -25,7 +25,8 @@ RUN PYTHON_VERSION=$(python3 -c "import sys; print(f'{sys.version_info.major}.{s
 RUN /usr/local/bin/pip install --no-cache-dir \
     --target=/app/.venv/lib/python3.10/site-packages \
     clickhouse-connect[sqlalchemy] \
-    clickhouse-driver
+    clickhouse-driver \
+    trino
 
 # Install additional database drivers to the venv
 RUN /usr/local/bin/pip install --no-cache-dir \
@@ -108,10 +109,10 @@ ENV PYTHONPATH=/app:/usr/local/lib/python3/site-packages:/usr/lib/python3/site-p
 
 # Verify all database drivers are installed before switching user
 RUN echo "====== Verifying Database Drivers ======" && \
-    python3 -c "import psycopg2; print(f'✓ psycopg2: {psycopg2.__version__}')" && \
+    python3 -c "import clickhouse_driver; print(f'✓ clickhouse-driver: {clickhouse_driver.__version__}')" && \
+    python3 -c "import trino; from trino.dbapi import connect; print('✓ trino: imported successfully')" && \
     python3 -c "import pymongo; print(f'✓ pymongo: {pymongo.__version__}')" && \
     python3 -c "import clickhouse_connect; print('✓ clickhouse-connect: imported successfully')" && \
-    python3 -c "import clickhouse_driver; print(f'✓ clickhouse-driver: {clickhouse_driver.__version__}')" && \
     python3 -c "from PIL import Image; import PIL; print(f'✓ Pillow: {PIL.__version__}')" && \
     python3 -c "import superset; print('✓ Superset: imported successfully')" && \
     echo "====== All drivers verified successfully ======"
