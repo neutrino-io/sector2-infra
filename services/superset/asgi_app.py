@@ -94,7 +94,7 @@ mcp_with_ctx = ContextPushingASGI(mcp_asgi, flask_app)
 
 
 class ProxyRouter:
-    """ASGI app: route /mcp -> MCP (with Flask app context); else -> Flask WSGI."""
+    """ASGI app: route /mcp -> MCP, /health -> 200 OK, else -> Flask WSGI."""
 
     def __init__(self, mcp_app, flask_wsgi_app):
         self.mcp_app = mcp_app
@@ -102,6 +102,11 @@ class ProxyRouter:
 
     async def __call__(self, scope, receive, send):
         path = scope.get("path", "") or ""
+        # Health check for Railway (and any other deployment orchestrator)
+        if path == "/health" or path == "/healthz":
+            await send({"type": "http.response.start", "status": 200, "headers": [(b"content-type", b"text/plain")]})
+            await send({"type": "http.response.body", "body": b"OK"})
+            return
         if path == "/mcp" or path.startswith("/mcp/"):
             await self.mcp_app(scope, receive, send)
         else:
