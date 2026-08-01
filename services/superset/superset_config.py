@@ -244,7 +244,7 @@ MCP_SERVICE_URL = os.environ.get(
 # http://0.0.0.0:8080/...). Set it to your Railway public domain.
 WEBDRIVER_BASEURL_USER_FRIENDLY = (
     os.environ.get("WEBDRIVER_BASEURL_USER_FRIENDLY")
-    or "https://apache-superset-railway-production-13fe.up.railway.app"
+    or "https://sector2-superset-production.up.railway.app"
 )
 # RBAC: enforce Superset's role-based access control on MCP tool calls.
 MCP_RBAC_ENABLED = True

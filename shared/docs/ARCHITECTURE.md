@@ -55,7 +55,7 @@ Superset ──reads/writes──► Redis (cache)
 All services run on Railway's internal network. Cross-service communication via:
 
 - `*.railway.internal` DNS (private)
-- Public ingress only on Superset (`apache-superset-railway-production-13fe.up.railway.app`)
+- Public ingress only on Superset (`sector2-superset-production.up.railway.app`)
 - Trino stays internal (only Superset connects to it)
 
 ## Why this architecture

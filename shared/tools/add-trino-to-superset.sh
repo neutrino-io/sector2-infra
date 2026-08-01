@@ -14,7 +14,7 @@
 #   4. Print next steps (add datasets, build dashboards)
 set -e
 
-SUPERSET_URL=${SUPERSET_URL:-https://apache-superset-railway-production-13fe.up.railway.app}
+SUPERSET_URL=${SUPERSET_URL:-https://sector2-superset-production.up.railway.app}
 TRINO_HOST=${TRINO_HOST:-sector2-trino.railway.internal}
 TRINO_PORT=${TRINO_PORT:-8080}
 TRINO_USER=${SUPERSET_ADMIN_USER:-admin}
