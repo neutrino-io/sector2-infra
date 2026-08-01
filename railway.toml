@@ -9,10 +9,10 @@
 #   - Each service gets its own [[services]] block
 #   - dockerfilePath is RELATIVE TO the repo root (no leading slash)
 #   - rootDirectory pins the build context for each service
-#   - Secrets come from Railway Variables via "${{ secrets.X }}" - NEVER commit
 #   - healthcheckPath = "" disables Railway's deploy-time probe (needed for
 #     ASGI services with custom ProxyRouter - see .omc/skills/railway-asgi-healthcheck-gotcha.md)
-# =============================================================================
+#   - healthcheckTimeout = 86400 (24h) effectively no-ops the healthcheck
+#     since the probe itself is disabled by healthcheckPath=""
 
 # -----------------------------------------------------------------------------
 # Service: sector2-superset
@@ -28,7 +28,7 @@ startCommand = "./superset_init.sh"
 # healthcheckPath intentionally empty - ProxyRouter's /health triggers
 # Railway's session killer after ~6 min. In-app /health route still works.
 healthcheckPath = ""
-healthcheckTimeout = null
+healthcheckTimeout = 86400
 restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 3
 
@@ -68,7 +68,7 @@ rootDirectory = "services/trino"
 # startCommand comes from Dockerfile ENTRYPOINT (trino-entrypoint.sh)
 # which does ${VAR} substitution on catalog templates then execs launcher
 healthcheckPath = ""
-healthcheckTimeout = null
+healthcheckTimeout = 86400
 restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 3
 
