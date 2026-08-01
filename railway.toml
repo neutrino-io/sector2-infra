@@ -18,7 +18,7 @@ restartPolicyMaxRetries = 3
 
 [services.deploy.volumes]
 mountPath = "/app/superset_home"
-name = "superset-data"
+name = "apache-superset-railway-volume"
 
 # Required environment variables (set in Railway Variables UI)
 [services.deploy.env]
@@ -29,6 +29,7 @@ SECRET_KEY = "${{ secrets.SECRET_KEY }}"
 SUPERSET_SECRET_KEY = "${{ secrets.SUPERSET_SECRET_KEY }}"
 SQLALCHEMY_DATABASE_URI = "${{ secrets.POSTGRES_URL }}"
 REDIS_URL = "${{ secrets.REDIS_URL }}"
+MAPBOX_API_KEY = "${{ secrets.MAPBOX_API_KEY }}"
 # Service references
 TRINO_HOST = "sector2-trino.railway.internal"
 TRINO_PORT = "8080"
