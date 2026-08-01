@@ -66,30 +66,33 @@ RUN mkdir -p /app/superset_home/data && \
     mkdir -p /app/superset_home/logs && \
     chown -R superset:superset /app/superset_home
 
+# Create scripts directory for db_upgrade_safe.py
+RUN mkdir -p /app/scripts
+
 # Environment variables
 ENV ADMIN_USERNAME=$ADMIN_USERNAME
 ENV ADMIN_EMAIL=$ADMIN_EMAIL
 ENV ADMIN_PASSWORD=$ADMIN_PASSWORD
 
 # Copy configuration files
-COPY scripts/superset_init.sh ./superset_init.sh
+COPY superset_init.sh ./superset_init.sh
 RUN chmod +x ./superset_init.sh
 
-COPY scripts/db_upgrade_safe.py /app/scripts/db_upgrade_safe.py
+COPY db_upgrade_safe.py /app/scripts/db_upgrade_safe.py
 RUN chmod +x /app/scripts/db_upgrade_safe.py
 
 # Auto-load the FAB patches for every Python process (gunicorn workers,
 # ad-hoc `python3` invocations, etc.). sitecustomize.py is run by Python's
 # site initialization on every startup; placing it in the venv's
 # site-packages ensures all of Superset's processes pick it up.
-COPY scripts/sitecustomize.py /app/.venv/lib/python3.10/site-packages/sitecustomize.py
+COPY sitecustomize.py /app/.venv/lib/python3.10/site-packages/sitecustomize.py
 
-COPY config/superset_config.py /app/
-COPY scripts/clickhouse_railway_engine.py /app/
+COPY superset_config.py /app/
+COPY clickhouse_railway_engine.py /app/
 
 # Configure Superset paths and application
 # ASGI app: serves Flask (Superset UI) + FastMCP (MCP) on port 8088.
-COPY scripts/asgi_app.py /app/asgi_app.py
+COPY asgi_app.py /app/asgi_app.py
 ENV SECRET_KEY=$SECRET_KEY
 ENV SUPERSET_HOME=/app/superset_home
 ENV FLASK_APP=superset.app:create_app()
