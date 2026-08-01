@@ -8,7 +8,7 @@ render_template() {
     local tpl="$1"
     local out="$2"
     echo "[entrypoint] Rendering $tpl -> $out"
-    while IFS= read -r line; do
+    while IFS= read -r line || [[ -n "$line" ]]; do
         while [[ "$line" =~ \$\{([A-Za-z_][A-Za-z0-9_]*)\} ]]; do
             var="${BASH_REMATCH[1]}"
             val="${!var:-}"
