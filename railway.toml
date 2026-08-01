@@ -6,8 +6,8 @@
 # Service: superset
 # ============================================================================
 [[services]]
-name = "superset"
-dockerfilePath = "services/superset/Dockerfile"
+name = "sector2-superset"
+dockerfilePath = "/services/superset/Dockerfile"
 
 [services.deploy]
 startCommand = "./superset_init.sh"
