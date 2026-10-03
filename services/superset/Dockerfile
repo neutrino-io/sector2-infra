@@ -60,9 +60,12 @@ RUN /usr/local/bin/pip install --no-cache-dir \
     apache-superset[echarts]
 
 # Install FastMCP (required by superset/mcp_service) and uvicorn (ASGI server)
+# Pin fastmcp >= 2.0: superset/mcp_service/middleware.py imports
+# `from fastmcp.tools.tool import Tool, ToolResult`, a module that only
+# exists in fastmcp 2.x (1.x and earlier had `fastmcp.tools.base`).
 RUN /usr/local/bin/pip install --no-cache-dir \
     --target=/app/.venv/lib/python3.10/site-packages \
-    fastmcp uvicorn
+    "fastmcp>=2.0" "uvicorn>=0.30"
 
 # Verify psycopg2 installation
 RUN python3 -c "import psycopg2; print(f'✓ psycopg2 version: {psycopg2.__version__}')"

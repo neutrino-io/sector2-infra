@@ -56,7 +56,7 @@ Railway-deployed infrastructure for the **Sector2** political intelligence platf
 sector2-infra/
 ├── README.md                       # This file
 ├── CLAUDE.md                       # AI-context for future agents
-├── railway.toml                    # Multi-service deployment config
+├── .railway/railway.ts             # IaC source of truth (Railway TypeScript)
 ├── .env.example                    # Template for required env vars
 ├── .gitignore                      # Python __pycache__, etc.
 │
