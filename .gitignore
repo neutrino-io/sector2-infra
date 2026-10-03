@@ -49,3 +49,6 @@ dist/
 build/
 *.tar.gz
 *.zip
+# Node
+node_modules/
+package-lock.json

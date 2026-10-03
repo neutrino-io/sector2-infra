@@ -1,0 +1,20 @@
+# Trino worker node config (paired with the coordinator service)
+coordinator=false
+node-scheduler.include-coordinator=false
+http-server.http.port=8080
+# Connect to the coordinator service via Railway's internal DNS.
+# In single-tenant Railway projects, services can reach each other
+# at <service-name>.railway.internal.
+discovery.uri=http://sector2-trino.railway.internal:8080
+node.id=trino-worker-1
+node.environment=production
+
+# Railway's edge proxy sets X-Forwarded-For - Trino 483 rejects by default.
+# Enable processing of forwarded headers from the trusted Railway proxy.
+http-server.process-forwarded=true
+
+# Items #3 (Trino QUEUED investigation) — 2026-10-03:
+# See config.properties.template.coordinator for the rationale. Workers
+# inherit the same timeouts so a stuck query times out on both ends.
+query.max-run-time=10m
+query.min-expire-age=10m

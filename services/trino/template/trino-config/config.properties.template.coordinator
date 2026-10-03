@@ -1,0 +1,20 @@
+# Trino coordinator single-node config (also acts as a worker in this deployment)
+coordinator=true
+node-scheduler.include-coordinator=true
+http-server.http.port=8080
+discovery.uri=http://127.0.0.1:8080
+node.id=trino-coordinator-1
+node.environment=production
+
+# Railway's edge proxy sets X-Forwarded-For - Trino 483 rejects by default.
+# Enable processing of forwarded headers from the trusted Railway proxy.
+http-server.process-forwarded=true
+
+# Items #3 (Trino QUEUED investigation) — 2026-10-03:
+# The default 5-min query timeout was abandoning our queries.
+# 10m gives us enough time to observe and diagnose.
+# The default discovery.uri used 'localhost' which some Trino 483 builds
+# resolve differently from '127.0.0.1'. Explicit 127.0.0.1 is more reliable
+# for self-discovery in single-node mode.
+query.max-run-time=10m
+query.min-expire-age=10m

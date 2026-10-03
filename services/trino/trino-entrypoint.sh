@@ -24,10 +24,21 @@ render_template() {
     chmod 600 "$out"
 }
 
+# Determine role. Default coordinator. Set TRINO_ROLE=worker for worker.
+ROLE="${TRINO_ROLE:-coordinator}"
+echo "[entrypoint] Starting Trino as ${ROLE}"
+
 # 1. Trino top-level configs: /etc/trino/template/trino-config/<name>.template -> /etc/trino/<name>
+# Role-specific config: <name>.template.<role> is rendered LAST and overwrites
+# <name>.template. (This is intentional: the role file sets the coordinator
+# vs worker flag, and we want the right one in /etc/trino/<name>.)
 shopt -s nullglob
 for tpl in /etc/trino/template/trino-config/*.template; do
     fname=$(basename "$tpl" .template)
+    render_template "$tpl" "/etc/trino/$fname"
+done
+for tpl in /etc/trino/template/trino-config/*.template.${ROLE}; do
+    fname=$(basename "$tpl" .template.${ROLE})
     render_template "$tpl" "/etc/trino/$fname"
 done
 
@@ -37,5 +48,10 @@ for tpl in /etc/trino/template/*.properties.template; do
     render_template "$tpl" "$out"
 done
 shopt -u nullglob
+
+# Verify the role-specific config exists
+if [[ -f "/etc/trino/config.properties" ]]; then
+    echo "[entrypoint] Active role: $(grep '^coordinator=' /etc/trino/config.properties | head -1)"
+fi
 
 exec /usr/lib/trino/bin/launcher run --etc-dir /etc/trino
