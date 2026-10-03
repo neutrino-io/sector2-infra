@@ -6,6 +6,12 @@ http-server.http.port=8080
 # In single-tenant Railway projects, services can reach each other
 # at <service-name>.railway.internal.
 discovery.uri=http://sector2-trino.railway.internal:8080
+# Advertise the worker's own Railway private domain as the URL
+# the coordinator should call back to. Required so the coordinator
+# resolves <service>.railway.internal correctly (instead of using
+# the worker's internal IP which may be unreachable from the
+# coordinator's network namespace).
+http-server.http.host=sector2-trino-worker.railway.internal
 node.id=trino-worker-1
 node.environment=production
 
