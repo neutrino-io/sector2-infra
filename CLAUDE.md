@@ -15,7 +15,7 @@ Railway infrastructure monorepo for the **Sector2** political intelligence platf
 | Path | Image | Purpose |
 |---|---|---|
 | `services/superset/` | apache/superset (custom Dockerfile) | BI dashboard UI |
-| `services/trino/` | trinodb/trino:435 | Query engine (Iceberg REST + ClickHouse JDBC) |
+| `services/trino/` | trinodb/trino:447 | Query engine (Iceberg REST + ClickHouse JDBC). Pinned 2026-10-03 after 474+ removed http-server.http.host |
 | `services/clickhouse/` | (skeleton) | ClickHouse instance template (NOT deployed) |
 
 ## Secrets
