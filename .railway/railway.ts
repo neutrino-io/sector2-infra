@@ -31,11 +31,13 @@ export default defineRailway(() => {
   const sector2Trino = service("sector2-trino", {
     source: github("neutrino-io/sector2-infra", { checkSuites: false, rootDirectory: "/services/trino" }),
     replicas: { "asia-southeast1-eqsg3a": 1 },
+    networking: { privateNetworkEndpoint: "sector2-trino" },
     env: { TRINO_ROLE: "coordinator", ADMIN_EMAIL: preserve(), ADMIN_PASSWORD: preserve(), ADMIN_USERNAME: preserve(), CLICKHOUSE_DATABASE: preserve(), CLICKHOUSE_HOST: preserve(), CLICKHOUSE_PASSWORD: preserve(), CLICKHOUSE_PORT: preserve(), CLICKHOUSE_USER: preserve(), FLASK_APP: preserve(), FORCE_REBUILD_TEST: preserve(), R2_ACCESS_KEY: preserve(), R2_CATALOG_TOKEN: preserve(), R2_ICEBERG_REST_URI: preserve(), R2_ICEBERG_WAREHOUSE: preserve(), R2_S3_ENDPOINT: preserve(), R2_SECRET_KEY: preserve(), SECRET_KEY: preserve(), SQLALCHEMY_DATABASE_URI: preserve(), SUPERSET_ENV: preserve(), SUPERSET_SECRET_KEY: preserve() },
   });
   const sector2TrinoWorker = service("sector2-trino-worker", {
     source: github("neutrino-io/sector2-infra", { checkSuites: false, rootDirectory: "/services/trino" }),
     replicas: { "asia-southeast1-eqsg3a": 1 },
+    networking: { privateNetworkEndpoint: "sector2-trino-worker" },
     env: { TRINO_ROLE: "worker", R2_ACCESS_KEY: sector2Trino.env.R2_ACCESS_KEY, R2_CATALOG_TOKEN: sector2Trino.env.R2_CATALOG_TOKEN, R2_ICEBERG_REST_URI: sector2Trino.env.R2_ICEBERG_REST_URI, R2_ICEBERG_WAREHOUSE: sector2Trino.env.R2_ICEBERG_WAREHOUSE, R2_S3_ENDPOINT: sector2Trino.env.R2_S3_ENDPOINT, R2_SECRET_KEY: sector2Trino.env.R2_SECRET_KEY, CLICKHOUSE_HOST: sector2Trino.env.CLICKHOUSE_HOST, CLICKHOUSE_PORT: sector2Trino.env.CLICKHOUSE_PORT, CLICKHOUSE_USER: sector2Trino.env.CLICKHOUSE_USER, CLICKHOUSE_PASSWORD: sector2Trino.env.CLICKHOUSE_PASSWORD, CLICKHOUSE_DATABASE: sector2Trino.env.CLICKHOUSE_DATABASE },
   });
   const sector2Superset = service("sector2-superset", {

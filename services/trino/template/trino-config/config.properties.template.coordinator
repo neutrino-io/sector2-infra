@@ -2,9 +2,14 @@
 coordinator=true
 node-scheduler.include-coordinator=true
 http-server.http.port=8080
-discovery.uri=http://127.0.0.1:8080
+# Use Railway private DNS so workers can reach the coordinator reliably.
+# 127.0.0.1 fails when the coordinator restarts and gets a new internal IP.
+discovery.uri=http://sector2-trino.railway.internal:8080
 node.id=trino-coordinator-1
 node.environment=production
+# Advertise the Railway private DNS name so other nodes and the
+# coordinator itself can reach this node reliably after restarts.
+node.internal-address=sector2-trino.railway.internal
 
 # Railway's edge proxy sets X-Forwarded-For - Trino 483 rejects by default.
 # Enable processing of forwarded headers from the trusted Railway proxy.

@@ -8,6 +8,9 @@ http-server.http.port=8080
 discovery.uri=http://sector2-trino.railway.internal:8080
 node.id=trino-worker-1
 node.environment=production
+# Advertise the Railway private DNS name so the coordinator can reach
+# this worker reliably after restarts (IP changes are handled by DNS).
+node.internal-address=sector2-trino-worker.railway.internal
 
 # Railway's edge proxy sets X-Forwarded-For - Trino 483 rejects by default.
 # Enable processing of forwarded headers from the trusted Railway proxy.
