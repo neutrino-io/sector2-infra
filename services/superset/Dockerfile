@@ -28,6 +28,16 @@ RUN /usr/local/bin/pip install --no-cache-dir \
     clickhouse-driver \
     trino
 
+# Upgrade typing_extensions in the venv: apache/superset:latest bundles
+# an older version that lacks `sentinel` (added in 4.13), which `anyio >= 4.10`
+# imports on every uvicorn startup. Bump to a current version that satisfies
+# anyio's import. Without this, the asgi_app fails with
+# `ImportError: cannot import name 'sentinel' from 'typing_extensions'`.
+RUN /usr/local/bin/pip install --no-cache-dir \
+    --target=/app/.venv/lib/python3.10/site-packages \
+    --upgrade \
+    "typing_extensions>=4.13"
+
 # Install additional database drivers to the venv
 RUN /usr/local/bin/pip install --no-cache-dir \
     --target=/app/.venv/lib/python3.10/site-packages \
