@@ -19,3 +19,22 @@ http-server.process-forwarded=true
 # for self-discovery in single-node mode.
 query.max-run-time=10m
 query.min-expire-age=10m
+
+# Items #3 (Trino QUEUED investigation) — 2026-10-04:
+# /v1/memory (used by the coordinator's node-scheduler to verify
+# worker health) was returning 403 under the default Trino 447 PASSWORD
+# auth. The default auth requires explicit user/password config for
+# internal REST exchanges, which is impractical for the
+# coordinator↔worker heartbeat.
+#
+# http-server.authentication.allow-insecure-over-http=true disables
+# auth on the HTTP server. Acceptable for our deployment because the
+# service is only reachable on Railway's private DNS
+# (sector2-trino.railway.internal, sector2-trino-worker.railway.internal)
+# — not on the public internet. The /v1/statement endpoint is still
+# protected by the existing password auth (via env.TRINO_PASSWORD on
+# the public-facing /v1/info and /v1/statement paths).
+#
+# Remove this setting if/when the deployment exposes Trino on a public
+# endpoint or when Trino's OPA-based auth is fully configured.
+http-server.authentication.allow-insecure-over-http=true
