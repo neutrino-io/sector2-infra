@@ -1,10 +1,14 @@
-# Trino coordinator single-node config
+# Trino coordinator single-node config (also acts as a worker in this deployment)
 coordinator=true
 node-scheduler.include-coordinator=true
 http-server.http.port=8080
+# Use Railway private DNS so workers can reach the coordinator reliably.
+# 127.0.0.1 fails when the coordinator restarts and gets a new internal IP.
 discovery.uri=http://sector2-trino.railway.internal:8080
 node.id=trino-coordinator-1
 node.environment=production
+# Advertise the Railway private DNS name so other nodes and the
+# coordinator itself can reach this node reliably after restarts.
 node.internal-address=sector2-trino.railway.internal
 
 # Railway's edge proxy sets X-Forwarded-For - Trino 483 rejects by default.
@@ -15,37 +19,22 @@ http-server.process-forwarded=true
 # The default 5-min query timeout was abandoning our queries.
 # 10m gives us enough time to observe and diagnose.
 # The default discovery.uri used 'localhost' which some Trino 483 builds
-# resolve differently than '127.0.0.1'. Explicit 127.0.0.1 is more reliable
+# resolve differently from '127.0.0.1'. Explicit 127.0.0.1 is more reliable
 # for self-discovery in single-node mode.
 query.max-run-time=10m
 query.min-expire-age=10m
 
-# Items #3 (Trino QUEUED investigation) — 2026-10-04:
-# /v1/memory (used by the coordinator's node-scheduler to verify
-# worker health) was returning 403 under the default Trino 447 PASSWORD
-# auth. The default auth requires explicit user/password config for
-# internal REST exchanges, which is impractical for the
-# coordinator↔worker heartbeat.
+# Items #3 (Trino QUEUED investigation) — 2026-10-04 (real fix):
+# /v1/memory is hardcoded to require authentication (regardless of
+# authentication.type). The default PASSWORD auth requires a shared
+# secret between coordinator and worker for the internal REST exchange.
+# Without it, the worker's HTTP server returns 403 on /v1/memory and
+# the node-scheduler can't verify worker health, leaving queries in
+# state=QUEUED with nodes=0 forever.
 #
-# http-server.authentication.allow-insecure-over-http=true disables
-# auth on the HTTP server. Acceptable for our deployment because the
-# service is only reachable on Railway's private DNS
-# (sector2-trino.railway.internal, sector2-trino-worker.railway.internal)
-# — not on the public internet. The /v1/statement endpoint is still
-# protected by the existing password auth (via env.TRINO_PASSWORD on
-# the public-facing /v1/info and /v1/statement paths).
-#
-# Remove this setting if/when the deployment exposes Trino on a public
-# endpoint or when Trino's OPA-based auth is fully configured.
-http-server.authentication.allow-insecure-over-http=true
-
-# Items #3 (Trino QUEUED investigation) — 2026-10-04 (PART 2):
-# The real root cause was an UNSET `internal-communication.shared-secret`.
-# Per https://trino.io/docs/current/security/internal-communication.html:
-# "You must configure a shared secret to authenticate all communication
-# between nodes of the cluster [...] when using any authentication
-# between clients and the coordinator." Default PASSWORD auth
-# implicitly requires this secret. Without it, the worker's HTTP
-# server returns 403 on /v1/memory (the node-scheduler's health check),
-# and queries stay in state=QUEUED with nodes=0 forever.
+# Reference: https://trino.io/docs/current/security/internal-communication.html
+http-server.authentication.type=PASSWORD
+# Internal communication: shared secret between coordinator and worker
+# for the node-scheduler's /v1/memory health checks. Rendered at
+# container start from a Railway shared variable (never in the template).
 internal-communication.shared-secret=${INTERNAL_COMMUNICATION_SHARED_SECRET}

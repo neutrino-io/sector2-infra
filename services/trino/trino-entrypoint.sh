@@ -55,6 +55,17 @@ for tpl in /etc/trino/template/*.properties.template; do
 done
 shopt -u nullglob
 
+
+# 3. Authentication config: render /etc/trino/template/etc/<name>.template
+# to /etc/trino/<name>. Trino's PASSWORD auth needs password-authenticator.properties
+# at this location to know where to find the password file.
+shopt -s nullglob
+for tpl in /etc/trino/template/etc/*.template; do
+    fname=$(basename "$tpl" .template)
+    render_template "$tpl" "/etc/trino/$fname"
+done
+shopt -u nullglob
+
 # Verify the role-specific config exists
 if [[ -f "/etc/trino/config.properties" ]]; then
     echo "[entrypoint] Active role: $(grep '^coordinator=' /etc/trino/config.properties | head -1)"
