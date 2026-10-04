@@ -15,7 +15,7 @@ Railway infrastructure monorepo for the **Sector2** political intelligence platf
 | Path | Image | Purpose |
 |---|---|---|
 | `services/superset/` | apache/superset (custom Dockerfile) | BI dashboard UI |
-| `services/trino/` | trinodb/trino:447 | Query engine (Iceberg REST + ClickHouse JDBC). Pinned 2026-10-03 after 474+ removed http-server.http.host |
+| `services/trino/` | trinodb/trino:447 | Query engine (Iceberg REST + ClickHouse JDBC). 2-node topology: `sector2-trino` (coordinator) + `sector2-trino-worker`. Pinned 2026-10-03 after 474+ removed `http-server.http.host`. |
 | `services/clickhouse/` | (skeleton) | ClickHouse instance template (NOT deployed) |
 
 ## Secrets
@@ -33,15 +33,21 @@ Template: `.env.example`
 
 ## Deployment
 
-Single `railway.toml` at repo root declares all services via `[[services]]` blocks. Each service has its own `dockerfilePath` relative to repo root.
+IaC source of truth is **`.railway/railway.ts`** (Railway TypeScript DSL, IaC GA). The older `railway.toml` / `railway.json` formats are deprecated by Railway (EOL 2026-12-01).
 
 ```bash
 # Link to existing Railway project
 cd /DATA/Development/Sector2/Sources/sector2-infra
-railway link
+railway link --project 3e8abce5-0ce2-465e-aa7f-5ebd5105614b   # sector2 project
 
-# Deploy all services
-railway up
+# Preview changes (never apply blind — check the diff first)
+railway config plan
+
+# Apply the IaC config to Railway
+railway config apply
+
+# For ad-hoc one-off deploys of a single service (rarely used — prefer IaC)
+railway up --service <name>
 ```
 
 ## Tests
@@ -50,8 +56,11 @@ railway up
 # After Trino deploys:
 ./services/trino/verify-iceberg.sh
 
-# Full smoke test:
-./shared/tools/verify-all.sh
+# Full Trino 2-node cluster smoke test (1-node + 2-node assertions):
+TRINO_USER=sector2-verify TRINO_PASSWORD=<pwd> ./tests/trino_cluster_smoke.sh
+
+# Iceberg REST catalog end-to-end:
+python3 tests/test-iceberg-connection.py
 ```
 
 ## Conventions
