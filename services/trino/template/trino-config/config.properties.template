@@ -38,3 +38,14 @@ query.min-expire-age=10m
 # Remove this setting if/when the deployment exposes Trino on a public
 # endpoint or when Trino's OPA-based auth is fully configured.
 http-server.authentication.allow-insecure-over-http=true
+
+# Items #3 (Trino QUEUED investigation) — 2026-10-04 (PART 2):
+# The real root cause was an UNSET `internal-communication.shared-secret`.
+# Per https://trino.io/docs/current/security/internal-communication.html:
+# "You must configure a shared secret to authenticate all communication
+# between nodes of the cluster [...] when using any authentication
+# between clients and the coordinator." Default PASSWORD auth
+# implicitly requires this secret. Without it, the worker's HTTP
+# server returns 403 on /v1/memory (the node-scheduler's health check),
+# and queries stay in state=QUEUED with nodes=0 forever.
+internal-communication.shared-secret=${INTERNAL_COMMUNICATION_SHARED_SECRET}

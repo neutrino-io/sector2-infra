@@ -25,6 +25,12 @@ render_template() {
 }
 
 # Determine role. Default coordinator. Set TRINO_ROLE=worker for worker.
+
+# Inject the shared secret from env at template render time so it
+# never lands in the git-tracked template file. The secret is set as
+# a shared variable on the Railway environment.
+export INTERNAL_COMMUNICATION_SHARED_SECRET="${INTERNAL_COMMUNICATION_SHARED_SECRET:?internal-communication.shared-secret is required (Railway shared variable)}"
+
 ROLE="${TRINO_ROLE:-coordinator}"
 echo "[entrypoint] Starting Trino as ${ROLE}"
 
