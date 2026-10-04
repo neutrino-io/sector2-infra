@@ -88,6 +88,23 @@ echo "  version=$version uptime=$uptime starting=$starting"
 assert_eq "version is 447" "447" "$version"
 assert_eq "starting is false" "False" "$starting"
 
+
+echo "=== 1.5 /v1/memory: coordinator↔worker memory exchange works (Item #3 guard) ==="
+mem_status=$(curl -sS -o /dev/null -w "%{http_code}" -X GET -u "$TRINO_USER:$TRINO_PASSWORD" --max-time 10 "$BASE/v1/memory")
+echo "  /v1/memory status: $mem_status"
+if [[ "$mem_status" == "200" ]]; then
+    echo "  PASS  /v1/memory returned 200 (worker is in the scheduler pool)"
+elif [[ "$mem_status" == "401" || "$mem_status" == "403" ]]; then
+    # Item #3 pattern: worker is registered for liveness but
+    # /v1/memory auth is broken (OPA or password mismatch). Node-scheduler
+    # can't verify worker health → queries stay in QUEUED.
+    echo "  FAIL  /v1/memory returned $mem_status (auth broken — Item #3 regression)"
+    fail=$((fail + 1))
+else
+    echo "  WARN  /v1/memory returned $mem_status (unexpected; may be transient)"
+fi
+
+
 echo ""
 echo "=== 2. /v1/node: both nodes registered at railway.internal ==="
 nodes=$(curl -sS -X GET -u "$TRINO_USER:$TRINO_PASSWORD" --max-time 10 "$BASE/v1/node")
