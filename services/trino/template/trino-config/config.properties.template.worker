@@ -21,3 +21,11 @@ http-server.process-forwarded=true
 # inherit the same timeouts so a stuck query times out on both ends.
 query.max-run-time=10m
 query.min-expire-age=10m
+
+# Items #3 (Trino QUEUED investigation) — 2026-10-04 (PART 3):
+# The generic config.properties.template has the shared-secret line, but
+# the entrypoint script's role-specific render loop overwrites
+# /etc/trino/config.properties with THIS file. So the secret must live
+# here, not in the generic template. The value is substituted from the
+# INTERNAL_COMMUNICATION_SHARED_SECRET Railway env var (see trino-entrypoint.sh).
+internal-communication.shared-secret=${INTERNAL_COMMUNICATION_SHARED_SECRET}
